@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แผนกผสม (MIXING) — ศูนย์รวมระบบ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#0a2a2f;
+    --bg-mid:#0d3339;
+    --panel: rgba(255,255,255,0.05);
+    --panel-border: rgba(255,255,255,0.10);
+    --panel-hover: rgba(255,255,255,0.085);
+    --ink:#f2f7f5;
+    --ink-soft:#a9c2bf;
+    --ink-faint:#6f8b88;
+    --line: rgba(255,255,255,0.09);
+    --teal:#2dd4bf;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    color:var(--ink);
+    font-family:'Noto Sans Thai','Segoe UI',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    background:
+      radial-gradient(1100px 500px at 15% -10%, rgba(45,212,191,0.16), transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, rgba(96,165,250,0.12), transparent 55%),
+      linear-gradient(180deg, var(--bg-deep), var(--bg-mid) 45%, #0a2226 100%);
+    min-height:100vh;
+  }
+  .eyebrow, .mono, .clock, .btn, .station-num, .tag{
+    font-family:'Space Grotesk','Noto Sans Thai',sans-serif;
+    letter-spacing:0.05em;
+  }
+
+  /* ================= Top bar ================= */
+  .topbar{
+    max-width:1200px; margin:0 auto; padding:26px 24px 0;
+    display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  }
+  .brand{ display:flex; align-items:center; gap:12px; }
+  .brand-mark{
+    width:42px; height:42px; border-radius:11px;
+    background: linear-gradient(145deg, var(--teal), #0d8a6f);
+    display:flex; align-items:center; justify-content:center; font-size:19px;
+    box-shadow: 0 6px 18px -6px rgba(45,212,191,0.55), inset 0 0 0 1px rgba(255,255,255,0.25);
+  }
+  .brand-text .eyebrow{ font-size:10.5px; text-transform:uppercase; color:var(--teal); font-weight:600; }
+  .brand-text strong{ display:block; font-size:15px; font-weight:700; color:var(--ink); }
+  .clockbox{ text-align:right; }
+  .clock{ font-size:22px; font-weight:600; font-variant-numeric:tabular-nums; color:var(--ink); }
+  .shift-tag{
+    display:inline-flex; align-items:center; gap:6px; margin-top:3px;
+    font-size:10.5px; text-transform:uppercase; font-weight:600; color:#052220;
+    background: linear-gradient(120deg,var(--teal),#7be3c9); padding:3px 10px; border-radius:999px;
+  }
+  .shift-tag .dot{ width:5px; height:5px; border-radius:50%; background:#052220; }
+
+  /* ================= Hero ================= */
+  .hero{ max-width:1200px; margin:26px auto 0; padding:0 24px; }
+  .hero-copy{ max-width:640px; }
+  .hero-copy .eyebrow{ font-size:12px; color:var(--teal); font-weight:600; text-transform:uppercase; }
+  .hero-copy h1{
+    font-size: clamp(26px, 4vw, 38px); line-height:1.25; margin:8px 0 8px; font-weight:800; color:var(--ink);
+  }
+  .hero-copy p{ color:var(--ink-soft); font-size:14.5px; line-height:1.65; margin:0; max-width:540px; }
+
+  .pipeline{ margin-top:26px; overflow-x:auto; padding-bottom:6px; }
+  .pipeline svg{ width:100%; min-width:920px; height:auto; display:block; }
+  .pipe-base{ stroke:rgba(255,255,255,0.10); stroke-width:6; fill:none; stroke-linecap:round; }
+  .pipe-flow{
+    stroke: url(#flowGrad); stroke-width:6; fill:none; stroke-linecap:round;
+    stroke-dasharray: 14 22;
+    animation: flow 1.8s linear infinite;
+  }
+  @keyframes flow{ to{ stroke-dashoffset:-72; } }
+  .node-ring{ fill:rgba(10,42,47,0.9); stroke-width:2.5; }
+  .node-glow{ opacity:0.35; filter: blur(6px); }
+  .node-link{ cursor:pointer; }
+  .node-num{
+    font-family:'Space Grotesk',sans-serif; font-size:11px; font-weight:600; fill: var(--ink-faint);
+  }
+  @media (prefers-reduced-motion: reduce){ .pipe-flow{ animation:none; } }
+
+  /* ================= Grid ================= */
+  main{ max-width:1200px; margin:0 auto; padding:36px 24px 60px; }
+  .section-label{
+    font-size:11px; font-weight:600; color:var(--ink-faint); text-transform:uppercase;
+    letter-spacing:0.08em; margin:0 0 12px; font-family:'Space Grotesk',sans-serif;
+  }
+  .section-label:not(:first-child){ margin-top:30px; }
+  .grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(270px,1fr)); gap:18px; }
+
+  .card{
+    background: var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:16px;
+    padding:22px;
+    display:flex; flex-direction:column; gap:14px;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    position:relative; overflow:hidden;
+    transition: transform .2s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease;
+    opacity:0; transform:translateY(14px);
+    animation: rise .6s ease forwards;
+  }
+  .card::before{
+    content:""; position:absolute; inset:0; border-radius:16px; padding:1px;
+    background: linear-gradient(140deg, var(--accent) 0%, transparent 35%);
+    opacity:0; transition:opacity .2s ease;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    pointer-events:none;
+  }
+  .card:hover{
+    transform:translateY(-4px);
+    background: var(--panel-hover);
+    box-shadow: 0 18px 40px -18px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04);
+  }
+  .card:hover::before{ opacity:1; }
+  .card:nth-child(1){ animation-delay:.03s; }
+  .card:nth-child(2){ animation-delay:.08s; }
+  .card:nth-child(3){ animation-delay:.13s; }
+  .card:nth-child(4){ animation-delay:.18s; }
+  .card:nth-child(5){ animation-delay:.23s; }
+  @keyframes rise{ to{ opacity:1; transform:translateY(0); } }
+  @media (prefers-reduced-motion: reduce){ .card{ animation:none; opacity:1; transform:none; } }
+
+  .card-top{ display:flex; align-items:center; justify-content:space-between; }
+  .badge{
+    width:46px; height:46px; border-radius:12px;
+    display:flex; align-items:center; justify-content:center; font-size:21px;
+    background: color-mix(in srgb, var(--accent) 22%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+  .station-num{ font-size:11px; font-weight:600; color:var(--ink-faint); }
+  .live{ display:flex; align-items:center; gap:5px; font-size:10px; font-weight:600; color: var(--accent); }
+  .live .dot{ width:6px; height:6px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px var(--accent); animation:pulse 2s infinite; }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+  @media (prefers-reduced-motion: reduce){ .live .dot{ animation:none; } }
+
+  .card h2{ margin:0; font-size:17.5px; font-weight:700; color:var(--ink); }
+  .card p{ margin:0; font-size:13.5px; line-height:1.6; color:var(--ink-soft); flex:1; }
+
+  .card-foot{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .note{ font-size:11px; color:var(--ink-faint); font-weight:500; }
+  .btn{
+    display:inline-flex; align-items:center; gap:6px; text-decoration:none;
+    font-size:13px; font-weight:600; padding:9px 15px; border-radius:9px;
+    color:#05201d;
+    background: linear-gradient(120deg, var(--accent), color-mix(in srgb, var(--accent) 60%, white));
+    white-space:nowrap;
+    box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--accent) 70%, transparent);
+    transition: filter .15s ease, transform .15s ease;
+  }
+  .btn:hover{ filter:brightness(1.08); transform:translateY(-1px); }
+
+  footer{
+    max-width:1200px; margin:0 auto; padding:0 24px 44px;
+    color:var(--ink-faint); font-size:12px; line-height:1.7;
+    border-top:1px solid var(--line); padding-top:18px;
+  }
+
+  @media (max-width:560px){
+    .hero-copy h1{ font-size:24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark">🥛</div>
+    <div class="brand-text">
+      <div class="eyebrow">Mixing Department</div>
+      <strong>ศูนย์รวมระบบประจำแผนกผสม</strong>
+    </div>
+  </div>
+  <div class="clockbox">
+    <div class="clock" id="clock">--:--:--</div>
+    <div class="shift-tag"><span class="dot"></span><span id="shiftLabel">กะ —</span></div>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="hero-copy">
+    <div class="eyebrow">ทางเข้าใช้งาน · 10 ระบบ</div>
+    <h1>เลือกระบบที่ต้องการ<br>แล้วเข้าใช้งานได้ทันที</h1>
+    <p>รวมเครื่องมือทั้งหมดของแผนกผสมไว้ในไลน์เดียว — ตั้งแต่วางแผนผลิต เช็คชื่อต้นกะ บันทึกความสะอาด ไปจนถึงติดตามอะไหล่ ซ่อมบำรุง และแบบทดสอบความรู้</p>
+  </div>
+
+  <div class="pipeline">
+    <svg viewBox="0 0 1850 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ไลน์เชื่อมโยง 10 ระบบของแผนกผสม">
+      <defs>
+        <linearGradient id="flowGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%"   stop-color="#2dd4bf"/>
+          <stop offset="11%"  stop-color="#60a5fa"/>
+          <stop offset="22%"  stop-color="#22d3ee"/>
+          <stop offset="33%"  stop-color="#fbbf24"/>
+          <stop offset="44%"  stop-color="#a78bfa"/>
+          <stop offset="56%"  stop-color="#fb923c"/>
+          <stop offset="67%"  stop-color="#f472b6"/>
+          <stop offset="78%"  stop-color="#f87171"/>
+          <stop offset="89%"  stop-color="#a3e635"/>
+          <stop offset="100%" stop-color="#818cf8"/>
+        </linearGradient>
+      </defs>
+
+      <path class="pipe-base" d="M70,95 H1780"/>
+      <path class="pipe-flow" d="M70,95 H1780"/>
+
+      <g>
+        <circle class="node-glow" cx="70" cy="95" r="30" fill="#2dd4bf"/>
+        <a href="https://chaitthawattopz03-dot.github.io/MIXPASTPLAN/" class="node-link">
+          <circle class="node-ring" cx="70" cy="95" r="26" stroke="#2dd4bf"/>
+          <foreignObject x="49" y="74" width="42" height="42"><div xmlns="http://www.w3.org/1999/xhtml" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:22px;">🧪</div></foreignObject>
+        </a>
+        <text class="node-num" x="70" y="140" text-anchor="middle">01</text>
+      </g>
+
+      <g>
+        <circle class="node-glow" cx="260" cy="95" r="30" fill="#60a5fa"/>
+        <a href="https://chaitthawattopz03-dot.github.io/FaceScan-Report/" class="node-link">
+          <circle class="node-ring" cx="260" cy="95" r="26" stroke="#60a5fa"/>
+          <foreignObject x="239" y="74" width="42" height="42"><div xmlns="http://www.w3.org/1999/xhtml" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:22px;">🪪</div></foreignObject>
+        </a>
+        <text class="node-num" x="260" y="140" text-anchor="middle">02</text>
+      </g>
+
+      <g>
+        <circle class="node-glow" cx="450" cy="95" r="30" fill="#22d3ee"/>
+        <a href="https://chaitthawattopz03-dot.github.io/CIP-Checklist/" class="node-link">
+          <circle class="node-ring" cx="450" cy="95" r="26" stroke="#22d3ee"/>
+          <foreignObject x="429" y="74" width="42" height="42"><div xmlns="http://www.w3.org/1999/xhtml" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:22px;">🧼</div></foreignObject>
+        </a>
+        <text class="node-num" x="450" y="140" text-anchor="middle">03</text>
+      </g>
+
+      <g>
+        <circle class="node-glow" cx="640" cy="95" r="30" fill="#fbbf24"/>
+        <a href="https://chaitthawattopz03-dot.github.io/5sMixing/" class="node-link">
+          <circle class="node-ring" cx="640" cy="95" r="26" stroke="#fbbf24"/>
+          <foreignObject x="619" y="74" width="42" height="42"><div xmlns="http://www.w3.org/1999/xhtml" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:22px;">📋</div></foreignObject>
+        </a>
+        <text class="node-num" x="640" y="140" text-anchor="middle">04</text>
+      </g>
+
+      <g>
+        <circle class="node-glow" cx="830" cy="95" r="30" fill="#a78bfa"/>
+        <a href="https://chaitthawattopz03-dot.github.io/Recovery-intelligent/" class="node-link">
+          <circle class="node-ring" cx="830" cy="95" r="26" stroke="#a78bfa"/>
+          <foreignObject x="809" y="74" width="42" height="42"><div xmlns="http://www.w3.org/1999/xhtml" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:22px;">🛢️</div></foreignObject>
+        </a>
+        <text class="node-num" x="830" y="140" text-anchor="middle">05</text>
+      </g>
+
+      <g>
+        <circle class="node-glow" cx="1020" cy="95" r="30" fill="#fb923c"/>
+        <a href="https://chaitthawattopz03-dot.github.io/sparpart/" class="node-link">
+          <circle class="node-ring" cx="1020" cy="95" r="26" stroke="#fb923c"/>
+          <foreignObject x="999" y="74" width="42" height="42"><div xmlns="http://www.w3.org/1999/xhtml" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:22px;">🔧</div></foreignObject>
+        </a>
+        <text class="node-num" x="1020" y="140" text-anchor="middle">06</text>
+      </g>
+
+      <g>
+        <circle class="node-glow" cx="1210" cy="95" r="30" fill="#f472b6"/>
+        <a href="https://chaitthawattopz03-dot.github.io/PM-MIX/" class="node-link">
+          <circle class="node-ring" cx="1210" cy="95" r="26" stroke="#f472b6"/>
+          <foreignObject x="1189" y="74" width="42" height="42"><div xmlns="http://www.w3.org/1999/xhtml" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:22px;">⚙️</div></foreignObject>
+        </a>
+        <text class="node-num" x="1210" y="140" text-anchor="middle">07</text>
+      </g>
+
+      <g>
+        <circle class="node-glow" cx="1400" cy="95" r="30" fill="#f87171"/>
+        <a href="https://chaitthawattopz03-dot.github.io/CM-MIXING/" class="node-link">
+          <circle class="node-ring" cx="1400" cy="95" r="26" stroke="#f87171"/>
+          <foreignObject x="1379" y="74" width="42" height="42"><div xmlns="http://www.w3.org/1999/xhtml" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:22px;">🛠️</div></foreignObject>
+        </a>
+        <text class="node-num" x="1400" y="140" text-anchor="middle">08</text>
+      </g>
+
+      <g>
+        <circle class="node-glow" cx="1590" cy="95" r="30" fill="#a3e635"/>
+        <a href="https://chaitthawattopz03-dot.github.io/-/" class="node-link">
+          <circle class="node-ring" cx="1590" cy="95" r="26" stroke="#a3e635"/>
+          <foreignObject x="1569" y="74" width="42" height="42"><div xmlns="http://www.w3.org/1999/xhtml" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:22px;">🕒</div></foreignObject>
+        </a>
+        <text class="node-num" x="1590" y="140" text-anchor="middle">09</text>
+      </g>
+
+      <g>
+        <circle class="node-glow" cx="1780" cy="95" r="30" fill="#818cf8"/>
+        <a href="https://chaitthawattopz03-dot.github.io/Test-Mixing/" class="node-link">
+          <circle class="node-ring" cx="1780" cy="95" r="26" stroke="#818cf8"/>
+          <foreignObject x="1759" y="74" width="42" height="42"><div xmlns="http://www.w3.org/1999/xhtml" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:22px;">📝</div></foreignObject>
+        </a>
+        <text class="node-num" x="1780" y="140" text-anchor="middle">10</text>
+      </g>
+    </svg>
+  </div>
+</div>
+
+<main>
+  <div class="section-label">การผลิต &amp; คุณภาพ</div>
+  <div class="grid">
+
+    <div class="card" style="--accent:#2dd4bf">
+      <div class="card-top">
+        <div class="badge">🧪</div>
+        <div class="live"><span class="dot"></span>LIVE</div>
+      </div>
+      <div class="station-num">STATION 01</div>
+      <h2>MIX PAST Planner</h2>
+      <p>ตารางวางแผนผสม–พาสเจอร์ไรซ์ประจำวัน ครบทุกไลน์ในหน้าเดียว — Mix Plan, สถานะถัง, ไทม์ไลน์ PAST, Summary, ประวัติ และ AI Insight</p>
+      <div class="card-foot">
+        <span class="note">🔒 ส่วน SP.G ต้องรหัสผ่าน</span>
+        <a class="btn" href="https://chaitthawattopz03-dot.github.io/MIXPASTPLAN/">เข้าใช้งาน →</a>
+      </div>
+    </div>
+
+    <div class="card" style="--accent:#60a5fa">
+      <div class="card-top">
+        <div class="badge">🪪</div>
+        <div class="live"><span class="dot"></span>LIVE</div>
+      </div>
+      <div class="station-num">STATION 02</div>
+      <h2>สแกนหน้า &amp; รายงานสรุป</h2>
+      <p>แผงควบคุมข้อมูลพนักงาน — สรุปข้อมูลสแกนหน้าประจำปี และเช็คชื่อส่งกะประจำเดือน อัปโหลดไฟล์ Excel เพื่ออัปเดตข้อมูล</p>
+      <div class="card-foot">
+        <span class="note">⚠ เก็บในเครื่องนี้เท่านั้น</span>
+        <a class="btn" href="https://chaitthawattopz03-dot.github.io/FaceScan-Report/">เข้าใช้งาน →</a>
+      </div>
+    </div>
+
+    <div class="card" style="--accent:#22d3ee">
+      <div class="card-top">
+        <div class="badge">🧼</div>
+        <div class="live"><span class="dot"></span>LIVE</div>
+      </div>
+      <div class="station-num">STATION 03</div>
+      <h2>CIP Checklist</h2>
+      <p>บันทึกการทำความสะอาดระบบ (CIP) แยกตามไลน์และประเภทการ CIP พร้อมรูปถ่ายและลายเซ็นผู้ปฏิบัติงาน ดูประวัติและสรุปรายวันได้</p>
+      <div class="card-foot">
+        <span class="note">🔒 ต้องใส่รหัสผ่าน</span>
+        <a class="btn" href="https://chaitthawattopz03-dot.github.io/CIP-Checklist/">เข้าใช้งาน →</a>
+      </div>
+    </div>
+
+    <div class="card" style="--accent:#fbbf24">
+      <div class="card-top">
+        <div class="badge">📋</div>
+        <div class="live"><span class="dot"></span>LIVE</div>
+      </div>
+      <div class="station-num">STATION 04</div>
+      <h2>บันทึก 5ส ประจำวัน</h2>
+      <p>สะสาง สะดวก สะอาด สุขลักษณะ สร้างนิสัย — ติ๊กทีมงาน เลือกหมวด 5ส และพื้นที่ที่ทำ พร้อมสถิติและกระดานผู้เข้าร่วม</p>
+      <div class="card-foot">
+        <span class="note">🏆 มีระบบคะแนน</span>
+        <a class="btn" href="https://chaitthawattopz03-dot.github.io/5sMixing/">เข้าใช้งาน →</a>
+      </div>
+    </div>
+
+    <div class="card" style="--accent:#a78bfa">
+      <div class="card-top">
+        <div class="badge">🛢️</div>
+        <div class="live"><span class="dot"></span>LIVE</div>
+      </div>
+      <div class="station-num">STATION 05</div>
+      <h2>Recovery Tank Board</h2>
+      <p>ระบบติดตามถังพักและ Recovery แบบเรียลไทม์ — สถานะถังทั้งไลน์ ประวัติการคืนถังรายวัน และจัดการรายชื่อ/เลขถัง/รสชาติเอง</p>
+      <div class="card-foot">
+        <span class="note">💾 บันทึกอัตโนมัติในเครื่อง</span>
+        <a class="btn" href="https://chaitthawattopz03-dot.github.io/Recovery-intelligent/">เข้าใช้งาน →</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label">อะไหล่ &amp; ซ่อมบำรุง</div>
+  <div class="grid">
+
+    <div class="card" style="--accent:#fb923c">
+      <div class="card-top">
+        <div class="badge">🔧</div>
+        <div class="live"><span class="dot"></span>LIVE</div>
+      </div>
+      <div class="station-num">STATION 06</div>
+      <h2>Sparepart Lookup</h2>
+      <p>ค้นหารายการอะไหล่ของแผนกผสม (Plant 1000) ค้นชื่อหรือรหัส Material แล้วคัดลอก Material Number ไปใช้งานต่อได้ทันที</p>
+      <div class="card-foot">
+        <span class="note">🔍 ค้นหาด่วน</span>
+        <a class="btn" href="https://chaitthawattopz03-dot.github.io/sparpart/">เข้าใช้งาน →</a>
+      </div>
+    </div>
+
+    <div class="card" style="--accent:#f472b6">
+      <div class="card-top">
+        <div class="badge">⚙️</div>
+        <div class="live"><span class="dot"></span>LIVE</div>
+      </div>
+      <div class="station-num">STATION 07</div>
+      <h2>MIXING PM Dashboard</h2>
+      <p>ภาพรวมงาน Preventive Maintenance ของแผนกผสม — อัปโหลดไฟล์ SAP Export ดูตารางรายเดือน ความถี่ PM งบประมาณ และสรุปตาม PGrp</p>
+      <div class="card-foot">
+        <span class="note">📁 อัปโหลด SAP Export</span>
+        <a class="btn" href="https://chaitthawattopz03-dot.github.io/PM-MIX/">เข้าใช้งาน →</a>
+      </div>
+    </div>
+
+    <div class="card" style="--accent:#f87171">
+      <div class="card-top">
+        <div class="badge">🛠️</div>
+        <div class="live"><span class="dot"></span>LIVE</div>
+      </div>
+      <div class="station-num">STATION 08</div>
+      <h2>แดชบอร์ดงานซ่อมบำรุง</h2>
+      <p>ภาพรวมงานซ่อมบำรุง IW28 / IW38 สำหรับติดตามใบแจ้งซ่อมและงานคงค้างของไลน์ผสม</p>
+      <div class="card-foot">
+        <span class="note">📊 IW28 / IW38</span>
+        <a class="btn" href="https://chaitthawattopz03-dot.github.io/CM-MIXING/">เข้าใช้งาน →</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label">บุคลากร &amp; ฝึกอบรม</div>
+  <div class="grid">
+
+    <div class="card" style="--accent:#a3e635">
+      <div class="card-top">
+        <div class="badge">🕒</div>
+        <div class="live"><span class="dot"></span>LIVE</div>
+      </div>
+      <div class="station-num">STATION 09</div>
+      <h2>เช็คชื่อส่งกะ</h2>
+      <p>ระบบเช็คชื่อส่งกะประจำวันของแผนกผสม สำหรับบันทึกเวลาเข้า-ส่งกะของทีมงาน</p>
+      <div class="card-foot">
+        <span class="note">🕒 ใช้ทุกกะ</span>
+        <a class="btn" href="https://chaitthawattopz03-dot.github.io/-/">เข้าใช้งาน →</a>
+      </div>
+    </div>
+
+    <div class="card" style="--accent:#818cf8">
+      <div class="card-top">
+        <div class="badge">📝</div>
+        <div class="live"><span class="dot"></span>LIVE</div>
+      </div>
+      <div class="station-num">STATION 10</div>
+      <h2>แบบทดสอบความรู้</h2>
+      <p>แบบทดสอบความรู้ประจำแผนกผสม พิมพ์ชื่อแล้วเริ่มทำได้เลย ข้อมูลเชื่อมกับ Firebase ให้ทุกคนใช้ร่วมกัน ผลคะแนนดูได้เฉพาะผู้ดูแลระบบ</p>
+      <div class="card-foot">
+        <span class="note">🔥 เชื่อม Firebase</span>
+        <a class="btn" href="https://chaitthawattopz03-dot.github.io/Test-Mixing/">เข้าใช้งาน →</a>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  หน้านี้เป็นเพียงทางเข้า (ลิงก์ไปยังแต่ละระบบ) — ข้อมูลของแต่ละระบบไม่ได้เชื่อมถึงกัน (ยกเว้นแบบทดสอบที่เชื่อม Firebase) และบางระบบเก็บข้อมูลไว้ในเบราว์เซอร์ของเครื่องที่ใช้งานเท่านั้น
+</footer>
+
+<script>
+  function pad(n){ return n.toString().padStart(2,'0'); }
+  function updateClock(){
+    const now = new Date();
+    document.getElementById('clock').textContent =
+      pad(now.getHours())+":"+pad(now.getMinutes())+":"+pad(now.getSeconds());
+    const h = now.getHours();
+    let shift = "กะดึก";
+    if(h>=6 && h<14) shift = "กะเช้า";
+    else if(h>=14 && h<22) shift = "กะบ่าย";
+    document.getElementById('shiftLabel').textContent = shift;
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+</script>
+
+</body>
+</html>
